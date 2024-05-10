@@ -22,6 +22,27 @@ var VALID_SAMPLING_RATES = [8000, 12000, 16000, 24000, 48000];
 var MAX_FRAME_SIZE = (48000 * 60) / 1000;
 var MAX_PACKET_SIZE = 1276 * 3;
 
+class OpusScriptHandler {
+	static __name__ = "OpusScriptHandler";
+	__name__ = "OpusScriptHandler";
+
+	constructor(...args) {
+		this.__pointer__ = opusscript_native_nasm[this.__name__ + "_new"](...args);
+
+		const methods = ["_encode", "_decode", "_encoder_ctl", "_decoder_ctl"];
+
+		methods.forEach((method) => {
+			this[method] = (...args) => {
+				return opusscript_native_nasm[this.__name__ + method](this.__pointer__, ...args);
+			};
+		});
+	}
+
+	static destroy_handler(handler) {
+		opusscript_native_nasm[this.__name__ + "_static_" + "destroy_handler"](handler.__pointer__);
+	}
+}
+
 function OpusScript(samplingRate, channels, application, options) {
 	if (!~VALID_SAMPLING_RATES.indexOf(samplingRate)) {
 		throw new RangeError(`${samplingRate} is an invalid sampling rate.`);
@@ -35,11 +56,7 @@ function OpusScript(samplingRate, channels, application, options) {
 	let opusscript_native = null;
 
 	opusscript_native = opusscript_native_nasm;
-	this.handler = new opusscript_native.OpusScriptHandler(
-		this.samplingRate,
-		this.channels,
-		this.application
-	);
+	this.handler = new OpusScriptHandler(this.samplingRate, this.channels, this.application);
 
 	this.inPCMLength = MAX_FRAME_SIZE * this.channels * 2;
 	this.inPCMPointer = opusscript_native._malloc(this.inPCMLength);
@@ -115,7 +132,7 @@ OpusScript.prototype.decoderCTL = function decoderCTL(ctl, arg) {
 
 OpusScript.prototype.delete = function del() {
 	let opusscript_native = opusscript_native_nasm;
-	opusscript_native.OpusScriptHandler.destroy_handler(this.handler);
+	OpusScriptHandler.destroy_handler(this.handler);
 	opusscript_native._free(this.inPCMPointer);
 	opusscript_native._free(this.inOpusPointer);
 	opusscript_native._free(this.outOpusPointer);
