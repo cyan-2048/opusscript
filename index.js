@@ -23,8 +23,8 @@ var MAX_FRAME_SIZE = (48000 * 60) / 1000;
 var MAX_PACKET_SIZE = 1276 * 3;
 
 class OpusScriptHandler {
-	static __name__ = "OpusScriptHandler";
-	__name__ = "OpusScriptHandler";
+	static __name__ = "_OpusScriptHandler";
+	__name__ = "_OpusScriptHandler";
 
 	constructor(...args) {
 		this.__pointer__ = opusscript_native_nasm[this.__name__ + "_new"](...args);
