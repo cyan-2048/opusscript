@@ -33,7 +33,7 @@ class OpusScriptHandler {
 
 		methods.forEach((method) => {
 			this[method] = (...args) => {
-				return opusscript_native_nasm[this.__name__ + method](this.__pointer__, ...args);
+				return opusscript_native_nasm[this.__name__ + "_" + method](this.__pointer__, ...args);
 			};
 		});
 	}
