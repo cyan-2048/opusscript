@@ -2,6 +2,13 @@
 
 let opusscript_native_nasm = require("./build/opusscript_native_nasm.js")();
 
+let ready = false;
+
+Promise.resolve(opusscript_native_nasm).then((mod) => {
+	opusscript_native_nasm = mod;
+	ready = true;
+});
+
 var OpusApplication = {
 	VOIP: 2048,
 	AUDIO: 2049,
@@ -25,14 +32,22 @@ var MAX_PACKET_SIZE = 1276 * 3;
 class OpusScriptHandler {
 	static __name__ = "_OpusScriptHandler";
 	__name__ = "_OpusScriptHandler";
+	__pointer__ = null;
 
 	constructor(...args) {
-		this.__pointer__ = opusscript_native_nasm[this.__name__ + "_new"](...args);
-
 		const methods = ["_encode", "_decode", "_encoder_ctl", "_decoder_ctl"];
+
+		if (ready) {
+			this.__pointer__ = opusscript_native_nasm[this.__name__ + "_new"](...args);
+		} else
+			Promise.resolve(opusscript_native_nasm).then((mod) => {
+				this.__pointer__ = mod[this.__name__ + "_new"](...args);
+				ready = true;
+			});
 
 		methods.forEach((method) => {
 			this[method] = (...args) => {
+				if (this.__pointer__ === null) throw new Error("asm.js module not ready");
 				return opusscript_native_nasm[this.__name__ + "_" + method](this.__pointer__, ...args);
 			};
 		});
